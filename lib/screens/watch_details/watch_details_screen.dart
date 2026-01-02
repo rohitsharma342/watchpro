@@ -118,6 +118,7 @@ class _WatchDetailsScreenState extends State<WatchDetailsScreen> {
       sellerId: widget.watch.sellerId,
       sellerName: widget.watch.sellerName,
       sellerImage: widget.watch.sellerImage,
+      watchId: widget.watch.id,
       watchTitle: widget.watch.title,
     );
 

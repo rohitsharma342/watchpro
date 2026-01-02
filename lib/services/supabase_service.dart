@@ -83,7 +83,8 @@ class SupabaseService {
       var query = _client.from(table).select();
       
       if (orderBy != null) {
-        query = query.order(orderBy, ascending: ascending);
+        final response = await query.order(orderBy, ascending: ascending);
+        return List<Map<String, dynamic>>.from(response);
       }
       
       final response = await query;

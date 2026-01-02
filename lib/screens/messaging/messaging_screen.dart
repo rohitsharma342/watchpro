@@ -97,55 +97,64 @@ class _MessagingScreenState extends State<MessagingScreen> {
           Expanded(
             child: Consumer<MessageProvider>(
               builder: (context, messageProvider, child) {
-                final messages = messageProvider.getMessages(widget.sellerId);
+                return FutureBuilder(
+                  future: messageProvider.getMessages(widget.sellerId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: AppTheme.pastelGreen,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.chat_bubble_outline,
-                            size: 48,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Start a conversation',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ask about ${widget.watchTitle}',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                    final messages = snapshot.data ?? [];
 
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isMe =
-                        message.senderId == StaticData.currentUser.id;
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: AppTheme.pastelGreen,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.chat_bubble_outline,
+                                size: 48,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Start a conversation',
+                              style:
+                                  Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                      ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Ask about ${widget.watchTitle}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
-                    return MessageBubble(
-                      message: message,
-                      isMe: isMe,
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        final isMe =
+                            message.senderId == StaticData.currentUser.id;
+
+                        return MessageBubble(
+                          message: message,
+                          isMe: isMe,
+                        );
+                      },
                     );
                   },
                 );
