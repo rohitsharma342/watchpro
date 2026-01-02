@@ -1,18 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/auth_service.dart';
-import '../data/models/user_model.dart';
-import '../data/repositories/user_repository.dart';
+import '../services/supabase_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   User? _currentUser;
-  UserModel? _userProfile;
   bool _isLoading = false;
   String _error = '';
   bool _isLoggedIn = false;
 
   User? get currentUser => _currentUser;
-  UserModel? get userProfile => _userProfile;
   bool get isLoading => _isLoading;
   String get error => _error;
   bool get isLoggedIn => _isLoggedIn;
@@ -22,35 +18,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initializeAuth() {
-    _currentUser = AuthService.getCurrentUser();
+    _currentUser = SupabaseService.getCurrentUser();
     _isLoggedIn = _currentUser != null;
     
-    if (_isLoggedIn && _currentUser != null) {
-      _loadUserProfile(_currentUser!.id);
-    }
-    
     // Listen to auth state changes
-    AuthService.authStateChanges().listen((AuthState data) {
+    SupabaseService.authStateChanges().listen((AuthState data) {
       _currentUser = data.session?.user;
       _isLoggedIn = _currentUser != null;
-      
-      if (_isLoggedIn && _currentUser != null) {
-        _loadUserProfile(_currentUser!.id);
-      } else {
-        _userProfile = null;
-      }
-      
       notifyListeners();
     });
-  }
-
-  Future<void> _loadUserProfile(String userId) async {
-    try {
-      _userProfile = await UserRepository.fetchUserProfile(userId);
-      notifyListeners();
-    } catch (e) {
-      print('Error loading user profile: $e');
-    }
   }
 
   Future<bool> signUp({
@@ -63,22 +39,18 @@ class AuthProvider extends ChangeNotifier {
       _error = '';
       notifyListeners();
 
-      final response = await AuthService.signUp(
-        email: email,
-        password: password,
-        name: name,
-      );
-
+      final response = await SupabaseService.signUp(email, password, name);
+      
       if (response?.user != null) {
         _currentUser = response!.user;
         _isLoggedIn = true;
-        await _loadUserProfile(_currentUser!.id);
         return true;
       }
       
       return false;
     } catch (e) {
       _error = _getErrorMessage(e.toString());
+      print('SignUp error: $e');
       return false;
     } finally {
       _isLoading = false;
@@ -95,21 +67,18 @@ class AuthProvider extends ChangeNotifier {
       _error = '';
       notifyListeners();
 
-      final response = await AuthService.signIn(
-        email: email,
-        password: password,
-      );
-
+      final response = await SupabaseService.signIn(email, password);
+      
       if (response?.user != null) {
         _currentUser = response!.user;
         _isLoggedIn = true;
-        await _loadUserProfile(_currentUser!.id);
         return true;
       }
       
       return false;
     } catch (e) {
       _error = _getErrorMessage(e.toString());
+      print('SignIn error: $e');
       return false;
     } finally {
       _isLoading = false;
@@ -120,53 +89,20 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       _isLoading = true;
+      _error = '';
       notifyListeners();
 
-      await AuthService.signOut();
+      await SupabaseService.signOut();
       
       _currentUser = null;
-      _userProfile = null;
       _isLoggedIn = false;
-      _error = '';
     } catch (e) {
       _error = _getErrorMessage(e.toString());
+      print('SignOut error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<void> updateProfile({
-    String? name,
-    String? phone,
-    String? location,
-  }) async {
-    if (_userProfile == null || _currentUser == null) return;
-
-    try {
-      _isLoading = true;
-      _error = '';
-      notifyListeners();
-
-      final updatedProfile = _userProfile!.copyWith(
-        name: name ?? _userProfile!.name,
-        phone: phone ?? _userProfile!.phone,
-        location: location ?? _userProfile!.location,
-      );
-
-      await UserRepository.updateUserProfile(_currentUser!.id, updatedProfile);
-      _userProfile = updatedProfile;
-    } catch (e) {
-      _error = _getErrorMessage(e.toString());
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  void clearError() {
-    _error = '';
-    notifyListeners();
   }
 
   String _getErrorMessage(String error) {
@@ -178,10 +114,15 @@ class AuthProvider extends ChangeNotifier {
       return 'Password must be at least 6 characters long';
     } else if (error.contains('Unable to validate email address')) {
       return 'Please enter a valid email address';
-    } else if (error.contains('Network')) {
+    } else if (error.contains('Network request failed')) {
       return 'Network error. Please check your connection';
     } else {
       return 'An error occurred. Please try again';
     }
+  }
+
+  void clearError() {
+    _error = '';
+    notifyListeners();
   }
 }

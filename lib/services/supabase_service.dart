@@ -28,8 +28,6 @@ class SupabaseService {
           'location': '',
           'total_sales': 0,
           'rating': 0.0,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
         });
       }
       
@@ -83,8 +81,7 @@ class SupabaseService {
       var query = _client.from(table).select();
       
       if (orderBy != null) {
-        final response = await query.order(orderBy, ascending: ascending);
-        return List<Map<String, dynamic>>.from(response);
+        query = query.order(orderBy, ascending: ascending);
       }
       
       final response = await query;
