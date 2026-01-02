@@ -24,6 +24,9 @@ class AppTheme {
   static const Color pastelPink = Color(0xFFFED7E2);
   static const Color pastelYellow = Color(0xFFFEFCBF);
   
+  // Additional Colors
+  static const Color dividerColor = Color(0xFFE2E8F0);
+  
   // Theme Data
   static ThemeData get lightTheme {
     return ThemeData(
@@ -162,7 +165,7 @@ class AppTheme {
           fontSize: 14,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceColor,
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.1),

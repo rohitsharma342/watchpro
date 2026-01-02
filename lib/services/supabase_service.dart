@@ -78,7 +78,7 @@ class SupabaseService {
   // Database CRUD operations
   static Future<List<Map<String, dynamic>>> fetchData(String table, {String? orderBy, bool ascending = true}) async {
     try {
-      var query = _client.from(table).select();
+      PostgrestTransformBuilder<List<Map<String, dynamic>>> query = _client.from(table).select();
       
       if (orderBy != null) {
         query = query.order(orderBy, ascending: ascending);
