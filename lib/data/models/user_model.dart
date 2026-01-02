@@ -21,6 +21,33 @@ class UserModel {
     required this.rating,
   });
 
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      profileImage: json['profile_image'] as String,
+      phone: json['phone'] as String? ?? '',
+      location: json['location'] as String? ?? '',
+      memberSince: DateTime.parse(json['created_at'] as String),
+      totalSales: json['total_sales'] as int? ?? 0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'profile_image': profileImage,
+      'phone': phone,
+      'location': location,
+      'total_sales': totalSales,
+      'rating': rating,
+    };
+  }
+
   UserModel copyWith({
     String? id,
     String? name,
